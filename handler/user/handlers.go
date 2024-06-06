@@ -2,22 +2,21 @@ package user
 
 import (
 	"hw7garageproj/model"
+	"hw7garageproj/storage/goMap"
 	"strings"
 )
 
-type Storage interface {
-	AddUser(newUser *model.User)
-	DeleteUser(id int)
-	User(id int) *model.User
-	UpdateUser(newUser *model.User)
-}
+var storage = goMap.GetGarage()
 
-func Add(id int, name string, to Storage) error {
-	if id < 0 || strings.Trim(name, " ") == "" {
-		return InvalidInputErr
+func Add(id int, name string) error {
+	if id < 0 {
+		return InvalidIdErr
+	}
+	if strings.Trim(name, " ") == "" {
+		return InvalidNameErr
 	}
 
-	if user := to.User(id); user != nil {
+	if user := storage.User(id); user != nil {
 		return AlreadyExistsErr
 	}
 
@@ -26,39 +25,42 @@ func Add(id int, name string, to Storage) error {
 		Name: name,
 	}
 
-	to.AddUser(&newUser)
+	storage.AddUser(&newUser)
 	return nil
 }
 
-func Delete(id int, from Storage) {
+func Delete(id int) {
 	if id < 0 {
 		return
 	}
 
-	from.DeleteUser(id)
+	storage.DeleteUser(id)
 }
 
-func ById(id int, from Storage) (*model.User, error) {
+func ById(id int) (*model.User, error) {
 	if id < 0 {
-		return nil, InvalidInputErr
+		return nil, InvalidIdErr
 	}
 
-	if user := from.User(id); user != nil {
+	if user := storage.User(id); user != nil {
 		return user, nil
 	}
 	return nil, NotFoundErr
 }
 
-func Update(userId int, newName string, in Storage) error {
-	if userId < 0 || strings.Trim(newName, " ") == "" {
-		return InvalidInputErr
+func Update(userId int, newName string) error {
+	if userId < 0 {
+		return InvalidIdErr
+	}
+	if strings.Trim(newName, " ") == "" {
+		return InvalidNameErr
 	}
 
 	var user *model.User
-	if user = in.User(userId); user == nil {
+	if user = storage.User(userId); user == nil {
 		return NotFoundErr
 	}
 	user.Name = newName
-	in.UpdateUser(user)
+	storage.UpdateUser(user)
 	return nil
 }

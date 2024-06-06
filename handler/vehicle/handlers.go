@@ -3,34 +3,26 @@ package vehicle
 import (
 	"hw7garageproj/handler/user"
 	"hw7garageproj/model"
+	"hw7garageproj/storage/goMap"
 	"strings"
 )
 
-type Storage interface {
-	AddVehicle(newVehicle *model.Vehicle, toOwner *model.User)
-	DeleteVehicle(vehicle *model.Vehicle)
-	Vehicles(whose *model.User) []model.Vehicle
-	VehicleById(id int) *model.Vehicle
-	UpdateVehicle(updatedVehicle *model.Vehicle)
-}
+var storage = goMap.GetGarage()
 
-func Add(vId int, vName, vBrand, vModel string,
-	userId int, to Storage, userStorage user.Storage) error {
-	if vId < 0 ||
-		userId < 0 ||
-		strings.Trim(vName, " ") == "" ||
-		strings.Trim(vBrand, " ") == "" ||
-		strings.Trim(vModel, " ") == "" {
-
-		return InvalidInputErr
+func Add(vId int, vName, vBrand, vModel string, userId int) error {
+	if err := validateVehicleParameters(vId, vName, vBrand, vModel); err != nil {
+		return err
+	}
+	if userId < 0 {
+		return user.InvalidIdErr
 	}
 
-	u, err := user.ById(userId, userStorage)
+	u, err := user.ById(userId)
 	if err != nil {
 		return err
 	}
 
-	if vehicle := to.VehicleById(vId); vehicle != nil {
+	if vehicle := storage.VehicleById(vId); vehicle != nil {
 		return AlreadyExistsErr
 	}
 
@@ -41,45 +33,41 @@ func Add(vId int, vName, vBrand, vModel string,
 		Brand: vBrand,
 	}
 
-	to.AddVehicle(newVehicle, u)
+	storage.AddVehicle(newVehicle, u)
 	return nil
 }
 
-func AllBelongingTo(userId int, from Storage, userStorage user.Storage) ([]model.Vehicle, error) {
+func AllBelongingTo(userId int) ([]model.Vehicle, error) {
 	if userId < 0 {
-		return nil, InvalidInputErr
+		return nil, user.InvalidIdErr
 	}
 
-	u, err := user.ById(userId, userStorage)
+	u, err := user.ById(userId)
 	if err != nil {
 		return nil, err
 	}
 
-	return from.Vehicles(u), nil
+	return storage.Vehicles(u), nil
 }
 
-func ById(id int, in Storage) (*model.Vehicle, error) {
+func ById(id int) (*model.Vehicle, error) {
 	if id < 0 {
-		return nil, InvalidInputErr
+		return nil, InvalidIdErr
 	}
 
-	vehicle := in.VehicleById(id)
+	vehicle := storage.VehicleById(id)
 	if vehicle == nil {
 		return nil, NotFoundErr
 	}
 	return vehicle, nil
 }
 
-func Update(vId int, vName, vBrand, vModel string, in Storage) error {
-	if vId < 0 ||
-		strings.Trim(vName, " ") == "" ||
-		strings.Trim(vBrand, " ") == "" ||
-		strings.Trim(vModel, " ") == "" {
-
-		return InvalidInputErr
+func Update(vId int, vName, vBrand, vModel string) error {
+	if err := validateVehicleParameters(vId, vName, vBrand, vModel); err != nil {
+		return err
 	}
 
-	vehicle := in.VehicleById(vId)
+	vehicle := storage.VehicleById(vId)
 	if vehicle == nil {
 		return NotFoundErr
 	}
@@ -87,15 +75,31 @@ func Update(vId int, vName, vBrand, vModel string, in Storage) error {
 	vehicle.Name = vName
 	vehicle.Brand = vBrand
 	vehicle.Model = vModel
-	in.UpdateVehicle(vehicle)
+	storage.UpdateVehicle(vehicle)
 	return nil
 }
 
-func Delete(vId int, in Storage) {
+func Delete(vId int) {
 	if vId < 0 {
 		return
 	}
 
-	vehicle := in.VehicleById(vId)
-	in.DeleteVehicle(vehicle)
+	vehicle := storage.VehicleById(vId)
+	storage.DeleteVehicle(vehicle)
+}
+
+func validateVehicleParameters(vId int, vName, vBrand, vModel string) error {
+	if vId < 0 {
+		return InvalidIdErr
+	}
+	if strings.Trim(vName, " ") == "" {
+		return InvalidNameErr
+	}
+	if strings.Trim(vBrand, " ") == "" {
+		return InvalidBrandErr
+	}
+	if strings.Trim(vModel, " ") == "" {
+		return InvalidModelErr
+	}
+	return nil
 }
