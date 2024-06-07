@@ -5,9 +5,17 @@ import (
 	"hw7garageproj/handler/user"
 	"hw7garageproj/handler/vehicle"
 	"hw7garageproj/storage/goMap"
+	"time"
 )
 
 func main() {
+	go func() {
+		_ = user.Add(3, "ShortName")
+	}()
+	go func() {
+		_ = user.Add(4, "LongName")
+	}()
+	time.Sleep(1 * time.Second)
 	_ = user.Add(0, "Jack")
 	_ = user.Add(1, "Smith")
 	_ = user.Add(2, "Maria")

@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"hw7garageproj/handler/user"
 	"hw7garageproj/model"
 	"hw7garageproj/storage/goMap"
 	"strings"
@@ -14,12 +13,12 @@ func Add(vId int, vName, vBrand, vModel string, userId int) error {
 		return err
 	}
 	if userId < 0 {
-		return user.InvalidIdErr
+		return InvalidUserId
 	}
 
-	u, err := user.ById(userId)
-	if err != nil {
-		return err
+	u := storage.UserGet(userId)
+	if u == nil {
+		return UserNotFoundErr
 	}
 
 	if vehicle := storage.VehicleById(vId); vehicle != nil {
@@ -39,12 +38,12 @@ func Add(vId int, vName, vBrand, vModel string, userId int) error {
 
 func AllBelongingTo(userId int) ([]model.Vehicle, error) {
 	if userId < 0 {
-		return nil, user.InvalidIdErr
+		return nil, InvalidUserId
 	}
 
-	u, err := user.ById(userId)
-	if err != nil {
-		return nil, err
+	u := storage.UserGet(userId)
+	if u == nil {
+		return nil, UserNotFoundErr
 	}
 
 	return storage.Vehicles(u), nil

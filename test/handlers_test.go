@@ -10,6 +10,8 @@ import (
 
 func TestList(t *testing.T) {
 	t.Run("handlers", func(t *testing.T) {
+		g := goMap.GetGarage()
+		_ = g
 		_ = user.Add(0, "John")
 		_ = user.Add(1, "Jack")
 		err := user.Add(2, "Janny")

@@ -16,7 +16,7 @@ func Add(id int, name string) error {
 		return InvalidNameErr
 	}
 
-	if user := storage.User(id); user != nil {
+	if user := storage.UserGet(id); user != nil {
 		return AlreadyExistsErr
 	}
 
@@ -42,7 +42,7 @@ func ById(id int) (*model.User, error) {
 		return nil, InvalidIdErr
 	}
 
-	if user := storage.User(id); user != nil {
+	if user := storage.UserGet(id); user != nil {
 		return user, nil
 	}
 	return nil, NotFoundErr
@@ -57,7 +57,7 @@ func Update(userId int, newName string) error {
 	}
 
 	var user *model.User
-	if user = storage.User(userId); user == nil {
+	if user = storage.UserGet(userId); user == nil {
 		return NotFoundErr
 	}
 	user.Name = newName
